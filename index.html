@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tiger Legends Demonic 100</title>
+<link rel="manifest" href="manifest.json">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+body{background:#0a0a12;color:#fff;overflow:hidden;height:100vh;display:flex;flex-direction:column}
+#landscapeWarn{display:none;position:fixed;inset:0;background:#000;z-index:999;align-items:center;justify-content:center;flex-direction:column}
+@media (orientation:portrait){#landscapeWarn{display:flex}}
+#top{height:55px;background:linear-gradient(90deg,#111,#1a0000);display:flex;align-items:center;justify-content:space-between;padding:0 10px;border-bottom:2px solid #ff0000;gap:5px}
+.badge{background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:4px 8px;font-size:11px;text-align:center}
+.badge b{color:#ffd700;font-size:13px}
+#arena{flex:1;position:relative;background:radial-gradient(#1e2a1e,#0a0a12);display:flex;align-items:center;justify-content:center}
+#player{font-size:70px;z-index:5;filter:drop-shadow(0 0 15px #ff6600)}
+.enemyMob{position:absolute;font-size:45px;cursor:pointer}
+#bottom{height:105px;background:#0f0f0f;display:flex;gap:6px;padding:6px;border-top:2px solid #222}
+.panel{flex:1;background:#151515;border:1px solid #2a2a2a;border-radius:10px;padding:6px;display:flex;flex-direction:column}
+.panel h3{font-size:9px;color:#888;text-align:center}
+.btn{padding:6px;border:none;border-radius:6px;font-weight:900;font-size:10px;cursor:pointer}
+.btn-red{background:linear-gradient(#ff0000,#ff6600);color:#fff}
+.btn-dark{background:#222;color:#ccc;border:1px solid #333}
+.btn-gem{background:linear-gradient(#00d4ff,#0066ff);color:#fff}
+#shop{position:fixed;inset:0;background:rgba(0,0,0,0.96);z-index:50;display:none;padding:15px;overflow:auto}
+.itemShop{display:flex;align-items:center;justify-content:space-between;background:#1a1a1a;border:1px solid #333;padding:10px;border-radius:10px;margin:6px 0}
+#evoScreen{position:fixed;inset:0;background:#000;z-index:60;display:none;align-items:center;justify-content:center;flex-direction:column;text-align:center}
+</style>
+</head>
+<body>
+<div id="landscapeWarn"><div style="font-size:60px">📱➡️</div><h2>Vire o celular deitado</h2></div>
+<div id="top">
+<div class="badge">LVL<br><b id="lvl">1</b>/100</div>
+<div class="badge">💎<br><b id="gems">0</b></div>
+<div class="badge">🪙<br><b id="gold">0</b></div>
+<div class="badge" style="min-width:90px">🐯 <span id="curAnimal">Baby</span><br><span id="atk">ATK 10</span></div>
+<button class="btn btn-dark" onclick="openAnimals()">🔄 TROCAR</button>
+</div>
+<div id="arena"><div id="player">🐯</div></div>
+<div id="bottom">
+<div class="panel"><h3>ATRIBUTOS (10 💎)</h3><button class="btn btn-gem" onclick="up('atk')">⚔️ ATK +5</button><button class="btn btn-gem" style="margin-top:4px" onclick="up('hp')">❤️ HP +20</button></div>
+<div class="panel"><h3>LOJA / DINHEIRO</h3><button class="btn btn-dark" onclick="openShop()">🛡️ LOJA</button><button class="btn btn-dark" style="margin-top:4px;background:#003300;color:#0f0" onclick="buyReal()">💵 GEMAS REAL</button></div>
+<div class="panel"><h3>CAÇAR</h3><div style="font-size:9px;color:#aaa" id="enemyInfo">Caçando...</div><button class="btn btn-red" style="margin-top:4px" onclick="spawnWave()">🔍 CAÇAR +</button></div>
+</div>
+<div id="shop">
+<h2 style="color:#ffd700">🏪 LOJA</h2>
+<div class="itemShop"><span>🐾 Garra +15 ATK - 50💎</span><button class="btn btn-gem" onclick="buyEquip('garra',50,15)">COMPRAR</button></div>
+<div class="itemShop"><span>🦁 Juba Dourada +20 - 100💎</span><button class="btn btn-gem" onclick="buyEquip('juba',100,20)">COMPRAR</button></div>
+<div class="itemShop"><span>👹 Chifre Demoníaco +40 - 200💎</span><button class="btn btn-gem" onclick="buyEquip('chifre',200,40)">COMPRAR</button></div>
+<div class="itemShop"><span>🔥 Aura Fogo +50 - 300💎</span><button class="btn btn-gem" onclick="buyEquip('aura',300,50)">COMPRAR</button></div>
+<button class="btn btn-dark" style="width:100%;margin-top:15px;padding:12px" onclick="document.getElementById('shop').style.display='none'">FECHAR</button>
+</div>
+<div id="evoScreen"><div style="font-size:120px" id="evoEmoji">🐯</div><h1 style="color:#ff0000" id="evoTitle">EVOLUÇÃO!</h1><p id="evoDesc"></p><button class="btn btn-red" style="padding:15px 30px;margin-top:15px" onclick="closeEvo()">CONTINUAR</button></div>
+<script>
+let lvl=parseInt(localStorage.getItem('tlvl')||1),gems=parseInt(localStorage.getItem('tgems')||0),gold=parseInt(localStorage.getItem('tgold')||0),atk=parseInt(localStorage.getItem('tatk')||15),hp=100,curAnimalIdx=0;
+const animals=[{name:"Baby Tiger",emoji:"🐯",minLvl:1,color:"#ffaa00"},{name:"Young Tiger",emoji:"🐅",minLvl:10,color:"#ff8800"},{name:"Wolf",emoji:"🐺",minLvl:15,color:"#888"},{name:"Panther",emoji:"🐆",minLvl:25,color:"#222"},{name:"Lion",emoji:"🦁",minLvl:40,color:"#ffd700"},{name:"White Tiger",emoji:"🐯",minLvl:60,color:"#fff"},{name:"DEMONIC TIGER",emoji:"👹🐯",minLvl:100,color:"#ff0000"}];
+const enemiesByLvl=[{lvl:1,emoji:"🐰",name:"Coelho",hp:10,gold:5},{lvl:5,emoji:"🐭",name:"Rato",hp:20,gold:8},{lvl:12,emoji:"🦊",name:"Raposa",hp:35,gold:12},{lvl:20,emoji:"🐺",name:"Lobo",hp:60,gold:20},{lvl:35,emoji:"🐗",name:"Javali",hp:90,gold:30},{lvl:50,emoji:"🐻",name:"Urso",hp:130,gold:50},{lvl:70,emoji:"🦁",name:"Leão",hp:200,gold:80},{lvl:85,emoji:"🐉",name:"Dragão",hp:350,gold:150}];
+function getEnemyForLevel(l){let e=enemiesByLvl[0];for(let en of enemiesByLvl){if(l>=en.lvl)e=en}return e;}
+function updateUI(){document.getElementById('lvl').innerText=lvl;document.getElementById('gems').innerText=gems;document.getElementById('gold').innerText=gold;document.getElementById('atk').innerText='ATK '+atk;let a=animals[curAnimalIdx];document.getElementById('curAnimal').innerText=a.name;document.getElementById('player').innerText=a.emoji;document.getElementById('player').style.filter='drop-shadow(0 0 15px '+a.color+')';localStorage.setItem('tlvl',lvl);localStorage.setItem('tgems',gems);localStorage.setItem('tgold',gold);localStorage.setItem('tatk',atk);localStorage.setItem('tani',curAnimalIdx);if(lvl>=100&&curAnimalIdx<6){curAnimalIdx=6;showEvo(animals[6]);}else{for(let i=animals.length-1;i>=0;i--){if(lvl>=animals[i].minLvl&&i>curAnimalIdx&&animals[i].minLvl!=100){curAnimalIdx=i;showEvo(animals[i]);break;}}}}
+function showEvo(a){document.getElementById('evoScreen').style.display='flex';document.getElementById('evoEmoji').innerText=a.emoji;document.getElementById('evoTitle').innerText=a.name.toUpperCase()+'!';document.getElementById('evoDesc').innerText='Level '+lvl+' - Evoluiu para '+a.name+'!';}
+function closeEvo(){document.getElementById('evoScreen').style.display='none';updateUI();}
+function spawnWave(){document.querySelectorAll('.enemyMob').forEach(e=>e.remove());let et=getEnemyForLevel(lvl);document.getElementById('enemyInfo').innerText=et.name+' HP:'+et.hp;for(let i=0;i<3;i++){let d=document.createElement('div');d.className='enemyMob';d.innerText=et.emoji;d.style.left=(20+i*25+Math.random()*10)+'%';d.style.top=(20+Math.random()*50)+'%';d.onclick=()=>{if(atk>=et.hp){gold+=et.gold;lvl++;gems+=10;d.remove();if(lvl%5==0)spawnWave();updateUI();if(lvl%20==0){alert('📦 CAIXA +50 gemas!');gems+=50;updateUI();}}else alert('Fraco! Aumente ATK');};document.getElementById('arena').appendChild(d);}}
+function up(t){if(gems<10){alert('Precisa 10 gemas');return;}gems-=10;if(t=='atk')atk+=8;if(t=='hp')hp+=25;updateUI();}
+function openShop(){document.getElementById('shop').style.display='block';}
+function buyEquip(n,c,b){if(gems>=c){gems-=c;atk+=b;alert('Equipado! '+n);updateUI();}else alert('Precisa '+c+' gemas');}
+function openAnimals(){let list=animals.filter(a=>lvl>=a.minLvl).map((a,i)=>i+': '+a.emoji+' '+a.name).join('\n');let ch=prompt('Escolha:\n'+list);if(ch!==null){let idx=parseInt(ch);if(!isNaN(idx)&&lvl>=animals[idx].minLvl){curAnimalIdx=idx;updateUI();}}}
+function buyReal(){let o=prompt('💵 COMPRAR:\\n1-100 gemas R$2,90\\n2-500 gemas R$9,90\\n3-2000 + DEMONIC R$19,90\\nDigite:');if(o=='1'){gems+=100;alert('+100 gemas! Aqui entra seu link do Mercado Pago');}if(o=='2'){gems+=500;alert('+500 gemas');}if(o=='3'){gems+=2000;lvl=100;curAnimalIdx=6;alert('DEMONIC DESBLOQUEADO');}updateUI();}
+updateUI();spawnWave();
+</script>
+</body>
+</html>
+
